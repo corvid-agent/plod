@@ -1,1 +1,9 @@
-{"appId":0,"network":"testnet","keeperAppId":769891898,"notes":"not deployed"}
+{
+  "appId": 770734249,
+  "network": "testnet",
+  "keeperAppId": 769891898,
+  "upkeepId": 110,
+  "deployedAt": "2026-08-30",
+  "deployer": "CEPY52VZRWFLQCJZXQRVQFOPMNAD6M4HCDP4XWKVFXRONJTC6KJVWRCXJI",
+  "notes": "live on TestNet. weekly interval 224000 rounds, SKIP_AHEAD, 4000 µALGO/tick. first tick due ~round 67054248."
+}
