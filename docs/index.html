@@ -3,125 +3,85 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PLOD — waiting for first tick</title>
+  <title>PLOD — TestNet weekly tick</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <main class="crt" id="crt">
     <header>
       <h1>Plod</h1>
-      <div class="meta">TestNet · unaudited · weekly</div>
+      <div class="meta">Algorand TestNet · unaudited · weekly cadence · no wallet</div>
     </header>
 
     <section class="status-row">
-      <div class="label">Board</div>
-      <div class="destination grounded" id="headline">PLOD — waiting for first tick</div>
-      <div class="meta" id="subhead">not deployed</div>
+      <div class="label">Status</div>
+      <div class="destination grounded" id="headline">READING…</div>
+      <div class="meta" id="subhead">Asking TestNet what the keeper is doing.</div>
     </section>
 
     <section class="board">
       <div class="cell">
-        <div class="label">Calls</div>
-        <div class="flaps" id="calls" aria-label="call count"></div>
+        <div class="label">Ticks</div>
+        <div class="flaps" id="calls" aria-label="tick count"></div>
       </div>
       <div class="cell">
-        <div class="label">Last round</div>
+        <div class="label">Last tick round</div>
         <div class="flaps" id="last-round" aria-label="last tick round"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Next due round</div>
+        <div class="flaps" id="next-due" aria-label="next due round"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Escrow (ALGO)</div>
+        <div class="flaps" id="escrow" aria-label="escrow balance"></div>
       </div>
     </section>
 
-    <p class="notes" id="notes">
-      Flip <code>docs/deploy.json</code> <code>appId</code> after TestNet create.
-      Interval is chosen at Arcron register time, not compiled in.
-      ON TIME / LATE / GROUNDED against the live upkeep box is
-      <a href="https://github.com/corvid-agent/plod/issues/3">#3</a>.
+    <dl class="detail" id="detail" hidden>
+      <div><dt>Upkeep</dt><dd id="upkeep-id">—</dd></div>
+      <div><dt>Interval</dt><dd id="interval">—</dd></div>
+      <div><dt>Missed schedule</dt><dd id="policy">—</dd></div>
+      <div><dt>Fee per run</dt><dd id="fee">—</dd></div>
+      <div><dt>Runs left</dt><dd id="runs-left">—</dd></div>
+      <div><dt>Times executed</dt><dd id="ticks">—</dd></div>
+      <div><dt>Call selector</dt><dd id="selector">—</dd></div>
+    </dl>
+
+    <dl class="detail">
+      <div><dt>Plod app</dt><dd id="plod-app">—</dd></div>
+      <div><dt>Keeper app</dt><dd id="keeper-app">—</dd></div>
+      <div><dt>Keeper address</dt><dd id="keeper-addr" title="">—</dd></div>
+      <div><dt>Round</dt><dd id="round">—</dd></div>
+    </dl>
+
+    <section class="legend">
+      <div class="label">What the words mean</div>
+      <ul>
+        <li><b class="ontime">ON TIME</b> — the upkeep is funded and not yet due. A keeper is expected.</li>
+        <li><b class="late">LATE</b> — it is past its round and still unserviced. Any keeper may take it now.</li>
+        <li><b class="grounded">GROUNDED</b> — nothing is scheduled, or the escrow has fallen below one
+          execution fee, so no keeper can be paid to run it.</li>
+      </ul>
+      <p class="notes">
+        These are Arcron's own three states — <code>scheduled</code>, <code>due</code> and
+        <code>dormant</code> — in flight-board words. Dormancy is judged against the
+        <em>escalated</em> fee, because that is what a keeper would actually be owed: an upkeep can
+        starve at a balance its creator counted as several runs.
+      </p>
+    </section>
+
+    <p class="notes">
+      Read-only. Every number above comes from public TestNet state served by
+      <code>testnet-api.algonode.cloud</code> — the keeper's upkeep boxes and Plod's own global
+      state. There is no wallet, no key and no write path on this page.
+      Rounds are not a clock: Arcron promises "not before this round", never a wall-clock time,
+      so every duration here is an estimate at ~2.695 s/round.
+      Keeper <a href="https://testnet.explorer.perawallet.app/application/769891898">769891898</a>
+      is live and <b>not frozen</b>. Arcron is unaudited. TestNet only.
     </p>
     <p class="err" id="err" hidden></p>
   </main>
-  <script>
-    const INDEXER = "https://testnet-idx.algonode.cloud";
-
-    function flaps(el, text, width) {
-      const s = String(text).padStart(width, " ").slice(-width);
-      el.replaceChildren();
-      for (const ch of s) {
-        const d = document.createElement("span");
-        d.className = "flap" + (ch === " " ? " blank" : "");
-        d.textContent = ch === " " ? "0" : ch;
-        el.appendChild(d);
-      }
-    }
-
-    function b64utf8(b64) {
-      try { return atob(b64); } catch { return ""; }
-    }
-
-    function readGlobal(state, name) {
-      if (!Array.isArray(state)) return null;
-      for (const kv of state) {
-        if (b64utf8(kv.key) !== name) continue;
-        if (kv.value && kv.value.type === 2) return kv.value.uint;
-        if (kv.value && kv.value.type === 1) return kv.value.bytes;
-        return null;
-      }
-      return null;
-    }
-
-    async function main() {
-      flaps(document.getElementById("calls"), "0", 6);
-      flaps(document.getElementById("last-round"), "0", 10);
-
-      let cfg;
-      try {
-        const res = await fetch("./deploy.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("deploy.json " + res.status);
-        cfg = await res.json();
-      } catch (e) {
-        document.getElementById("err").hidden = false;
-        document.getElementById("err").textContent = "Could not read deploy.json";
-        return;
-      }
-
-      const appId = Number(cfg.appId) || 0;
-      const headline = document.getElementById("headline");
-      const subhead = document.getElementById("subhead");
-
-      if (appId <= 0) {
-        headline.textContent = "PLOD — waiting for first tick";
-        headline.className = "destination grounded";
-        subhead.textContent = (cfg.notes || "not deployed") + " · keeper " + (cfg.keeperAppId || "—");
-        document.title = "PLOD — waiting for first tick";
-        return;
-      }
-
-      subhead.textContent = "app " + appId + " · " + (cfg.network || "testnet");
-      try {
-        const res = await fetch(INDEXER + "/v2/applications/" + appId);
-        if (!res.ok) throw new Error("indexer " + res.status);
-        const body = await res.json();
-        const g = (body.params && body.params["global-state"]) || [];
-        const calls = readGlobal(g, "calls");
-        const last = readGlobal(g, "last_round");
-        flaps(document.getElementById("calls"), calls == null ? "—" : String(calls), 6);
-        flaps(document.getElementById("last-round"), last == null ? "—" : String(last), 10);
-        if (!calls) {
-          headline.textContent = "PLOD — waiting for first tick";
-          headline.className = "destination grounded";
-          document.title = "PLOD — waiting for first tick";
-        } else {
-          headline.textContent = "LIVE";
-          headline.className = "destination live";
-          document.title = "PLOD — " + calls + " ticks";
-        }
-      } catch (e) {
-        headline.textContent = "GROUNDED";
-        headline.className = "destination grounded";
-        document.getElementById("err").hidden = false;
-        document.getElementById("err").textContent = "Indexer unreachable; appId is set but state was not read.";
-      }
-    }
-
-    main();
-  </script>
+  <script type="module" src="./js/board.js"></script>
 </body>
 </html>

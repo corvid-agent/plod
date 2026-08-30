@@ -1,0 +1,9 @@
+{
+  "name": "plod-board",
+  "private": true,
+  "type": "module",
+  "description": "Tests for the Plod TestNet status board. No runtime dependencies: the board ships as plain ES modules.",
+  "scripts": {
+    "test": "node --test test/arcron.test.mjs test/status.test.mjs"
+  }
+}

@@ -193,3 +193,31 @@ h1 {
 @media (min-width: 560px) {
   .board { grid-template-columns: 1fr 1fr; }
 }
+
+/* Issue #3 added a third state word, a details list and a legend. The three
+   status colours were already here; ON TIME reuses the live phosphor so the
+   board keeps two greens rather than gaining a third hue. */
+.destination.ontime { color: var(--phosphor); }
+
+.detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem 1.5rem;
+  margin: 1.25rem 0 0;
+  font-size: 0.82rem;
+}
+.detail > div { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px dotted var(--phosphor-dead); padding-bottom: 0.2rem; }
+.detail dt { color: var(--phosphor-dim); letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.72rem; }
+.detail dd { margin: 0; color: var(--phosphor); text-align: right; word-break: break-all; }
+
+.legend { margin-top: 1.5rem; }
+.legend ul { list-style: none; padding: 0; margin: 0.5rem 0 0; font-size: 0.82rem; }
+.legend li { margin-bottom: 0.35rem; color: var(--phosphor-dim); }
+.legend b { letter-spacing: 0.1em; }
+.legend b.ontime { color: var(--phosphor); }
+.legend b.late { color: var(--red); }
+.legend b.grounded { color: var(--amber); }
+
+@media (min-width: 560px) {
+  .detail { grid-template-columns: 1fr 1fr; }
+}

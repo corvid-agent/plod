@@ -1,0 +1,24 @@
+name: test
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    paths:
+      - "docs/js/**"
+      - "test/**"
+      - "package.json"
+      - ".github/workflows/test.yml"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  board:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # No install step: the board has no dependencies, which is the point.
+      - name: Board arithmetic
+        run: npm test
