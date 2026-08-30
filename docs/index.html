@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PLOD — waiting for first tick</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="crt" id="crt">
+    <header>
+      <h1>Plod</h1>
+      <div class="meta">TestNet · unaudited · weekly</div>
+    </header>
+
+    <section class="status-row">
+      <div class="label">Board</div>
+      <div class="destination grounded" id="headline">PLOD — waiting for first tick</div>
+      <div class="meta" id="subhead">not deployed</div>
+    </section>
+
+    <section class="board">
+      <div class="cell">
+        <div class="label">Calls</div>
+        <div class="flaps" id="calls" aria-label="call count"></div>
+      </div>
+      <div class="cell">
+        <div class="label">Last round</div>
+        <div class="flaps" id="last-round" aria-label="last tick round"></div>
+      </div>
+    </section>
+
+    <p class="notes" id="notes">
+      Flip <code>docs/deploy.json</code> <code>appId</code> after TestNet create.
+      Interval is chosen at Arcron register time, not compiled in.
+      ON TIME / LATE / GROUNDED against the live upkeep box is
+      <a href="https://github.com/corvid-agent/plod/issues/3">#3</a>.
+    </p>
+    <p class="err" id="err" hidden></p>
+  </main>
+  <script>
+    const INDEXER = "https://testnet-idx.algonode.cloud";
+
+    function flaps(el, text, width) {
+      const s = String(text).padStart(width, " ").slice(-width);
+      el.replaceChildren();
+      for (const ch of s) {
+        const d = document.createElement("span");
+        d.className = "flap" + (ch === " " ? " blank" : "");
+        d.textContent = ch === " " ? "0" : ch;
+        el.appendChild(d);
+      }
+    }
+
+    function b64utf8(b64) {
+      try { return atob(b64); } catch { return ""; }
+    }
+
+    function readGlobal(state, name) {
+      if (!Array.isArray(state)) return null;
+      for (const kv of state) {
+        if (b64utf8(kv.key) !== name) continue;
+        if (kv.value && kv.value.type === 2) return kv.value.uint;
+        if (kv.value && kv.value.type === 1) return kv.value.bytes;
+        return null;
+      }
+      return null;
+    }
+
+    async function main() {
+      flaps(document.getElementById("calls"), "0", 6);
+      flaps(document.getElementById("last-round"), "0", 10);
+
+      let cfg;
+      try {
+        const res = await fetch("./deploy.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("deploy.json " + res.status);
+        cfg = await res.json();
+      } catch (e) {
+        document.getElementById("err").hidden = false;
+        document.getElementById("err").textContent = "Could not read deploy.json";
+        return;
+      }
+
+      const appId = Number(cfg.appId) || 0;
+      const headline = document.getElementById("headline");
+      const subhead = document.getElementById("subhead");
+
+      if (appId <= 0) {
+        headline.textContent = "PLOD — waiting for first tick";
+        headline.className = "destination grounded";
+        subhead.textContent = (cfg.notes || "not deployed") + " · keeper " + (cfg.keeperAppId || "—");
+        document.title = "PLOD — waiting for first tick";
+        return;
+      }
+
+      subhead.textContent = "app " + appId + " · " + (cfg.network || "testnet");
+      try {
+        const res = await fetch(INDEXER + "/v2/applications/" + appId);
+        if (!res.ok) throw new Error("indexer " + res.status);
+        const body = await res.json();
+        const g = (body.params && body.params["global-state"]) || [];
+        const calls = readGlobal(g, "calls");
+        const last = readGlobal(g, "last_round");
+        flaps(document.getElementById("calls"), calls == null ? "—" : String(calls), 6);
+        flaps(document.getElementById("last-round"), last == null ? "—" : String(last), 10);
+        if (!calls) {
+          headline.textContent = "PLOD — waiting for first tick";
+          headline.className = "destination grounded";
+          document.title = "PLOD — waiting for first tick";
+        } else {
+          headline.textContent = "LIVE";
+          headline.className = "destination live";
+          document.title = "PLOD — " + calls + " ticks";
+        }
+      } catch (e) {
+        headline.textContent = "GROUNDED";
+        headline.className = "destination grounded";
+        document.getElementById("err").hidden = false;
+        document.getElementById("err").textContent = "Indexer unreachable; appId is set but state was not read.";
+      }
+    }
+
+    main();
+  </script>
+</body>
+</html>
