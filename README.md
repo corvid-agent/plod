@@ -2,12 +2,25 @@
 
 A public weekly cadence on Arcron TestNet. If keepers show up, the counter ticks.
 
-**TestNet only. Unaudited. Not deployed yet.** There is no MainNet path, and this
-repo will refuse one. Do not send mainnet funds at this contract; there is no
-contract on any network until [#1](https://github.com/corvid-agent/plod/issues/1)
-lands.
+**LIVE on Arcron TestNet. Unaudited. No MainNet path.** This repo will refuse
+one. Do not send mainnet funds at this contract.
+
+| | live |
+|---|---|
+| App | [`770734249`](https://testnet.explorer.perawallet.app/application/770734249) |
+| Keeper | [`769891898`](https://testnet.explorer.perawallet.app/application/769891898) |
+| Upkeep | `110` |
+| Interval | `224000` rounds (~1 week at measured TestNet round time) |
+| Policy | `SKIP_AHEAD` |
+| Next tick | round `67054248` |
+| Fee | `4000` µALGO / tick |
+| Escrow | `500000` µALGO (0.5 ALGO) |
+| Ticks so far | `0` |
+| Creator | `CEPY52VZRWFLQCJZXQRVQFOPMNAD6M4HCDP4XWKVFXRONJTC6KJVWRCXJI` |
 
 Status board: <https://corvid-agent.github.io/plod/>
+
+Sibling flight board: [arrivals](https://corvid-agent.github.io/arrivals/).
 
 ## What it is
 
@@ -31,29 +44,36 @@ create-arg onto keeper app `769891898` would freeze a "weekly" interval at
 about 68 years. This contract takes no uint64 create args so that cannot
 happen here.
 
-## Intended register
+## Live register
 
-Once deployed on TestNet ([#1](https://github.com/corvid-agent/plod/issues/1)):
+On TestNet as of 2026-08-30 ([#1](https://github.com/corvid-agent/plod/issues/1),
+[#2](https://github.com/corvid-agent/plod/issues/2)):
 
 - Keeper: Arcron TestNet app **`769891898`**
+- Upkeep: **`110`**
 - Hook: `tick()` (selector only)
-- Interval: about a week, **~224000 rounds** at ~2.7 s/round
+- Interval: **224000 rounds** at measured ~2.7 s/round
+- Fee: **4000 µALGO**, escrow **0.5 ALGO**, policy **SKIP_AHEAD**
+- First tick due round **67054248**
+- Contract `calls` is still **0**
 
-That round count is **approximate** and must be chosen at **register** time
-against the round time you actually measure, not compiled into the app.
-See [#2](https://github.com/corvid-agent/plod/issues/2).
+That round count was chosen at **register** time against measured round time,
+not compiled into the app.
 
-The Pages stub lights up when `docs/deploy.json` has `appId > 0`. Later it
-should read the live upkeep box and show **ON TIME / LATE / GROUNDED** —
-[#3](https://github.com/corvid-agent/plod/issues/3).
+The Pages board reads **only** box `u || itob(110)` on the keeper plus this
+app's global `calls`. It paints **ON TIME / LATE / GROUNDED**
+([#3](https://github.com/corvid-agent/plod/issues/3)). It does not walk the
+rest of the keeper's boxes.
 
-## How a human deploys later
+## How it was deployed
 
 No mnemonic belongs in this repo, in a workflow, or in `docs/deploy.json`.
-The creator of record (CoS) deploys from a machine that already has the
-account, when that account has a TestNet bank ([#1](https://github.com/corvid-agent/plod/issues/1)).
+The creator of record deployed from a machine that already had the TestNet
+bank. Zero create-args. Then `set_keeper(769891898)`, then Arcron register
+for weekly `tick()`. Ids live in `docs/deploy.json`. Do not re-create.
 
-Sketch, AlgoKit / Puya, TestNet only:
+Sketch, AlgoKit / Puya, TestNet only — kept so nobody "helps" by passing
+the keeper id as a create arg:
 
 ```bash
 # compile
@@ -78,9 +98,10 @@ Puya constructor argument.
 
 ```
 smart_contracts/plod/contract.py   ARC-4 target
-docs/index.html                    CRT board (this Pages stub)
+docs/index.html                    CRT board
+docs/app.js                        live reader (upkeep 110 only)
 docs/style.css
-docs/deploy.json                   {"appId":0,...}  flip the number after deploy
+docs/deploy.json                   live TestNet ids (app 770734249)
 .github/workflows/pages.yml        publishes docs/ from main
 ```
 

@@ -10,31 +10,39 @@
   <main class="crt" id="crt">
     <header>
       <h1>Plod</h1>
-      <div class="meta" id="keeper-meta">TestNet · weekly · Arcron keeper</div>
+      <div class="meta" id="keeper-meta">TestNet · app 770734249 · upkeep 110</div>
     </header>
 
     <section class="status-row">
       <div class="label">Status</div>
       <div class="flaps big" id="status" aria-label="board status"></div>
-      <div class="meta" id="subhead">seeking</div>
+      <div class="meta" id="subhead">next 67054248 · ticks 0</div>
     </section>
 
     <section class="board" id="board">
       <div class="cell">
+        <div class="label">App</div>
+        <div class="flaps" id="stat-app" aria-label="plod app id">770734249</div>
+      </div>
+      <div class="cell">
+        <div class="label">Upkeep</div>
+        <div class="flaps" id="stat-upkeep" aria-label="arcron upkeep id">110</div>
+      </div>
+      <div class="cell">
         <div class="label">Next exec round</div>
-        <div class="flaps" id="stat-next" aria-label="next execution round"></div>
+        <div class="flaps" id="stat-next" aria-label="next execution round">67054248</div>
       </div>
       <div class="cell">
         <div class="label">Interval</div>
-        <div class="flaps" id="stat-interval" aria-label="upkeep interval"></div>
+        <div class="flaps" id="stat-interval" aria-label="upkeep interval">224000r</div>
       </div>
       <div class="cell">
         <div class="label">Times executed</div>
-        <div class="flaps" id="stat-exec" aria-label="times executed"></div>
+        <div class="flaps" id="stat-exec" aria-label="times executed">0</div>
       </div>
       <div class="cell">
         <div class="label">Escrow</div>
-        <div class="flaps" id="stat-escrow" aria-label="upkeep escrow balance"></div>
+        <div class="flaps" id="stat-escrow" aria-label="upkeep escrow balance">0.5 ALGO</div>
       </div>
       <div class="cell">
         <div class="label">Chain round</div>
@@ -42,13 +50,15 @@
       </div>
       <div class="cell">
         <div class="label">Ticks so far</div>
-        <div class="flaps" id="stat-ticks" aria-label="contract tick counter"></div>
+        <div class="flaps" id="stat-ticks" aria-label="contract tick counter">0</div>
       </div>
     </section>
 
     <p class="notes" id="notes">
-      One upkeep, one weekly <code>tick()</code>. Status is read from the Arcron
-      keeper's live box state on the TestNet indexer — the chain is the source
+      One upkeep, one weekly <code>tick()</code>. App
+      <a href="https://testnet.explorer.perawallet.app/application/770734249">770734249</a>,
+      upkeep 110, next round 67054248, ticks 0. Status is read from box
+      <code>u || itob(110)</code> on keeper 769891898 — the chain is the source
       of truth. Contract:
       <a href="https://github.com/corvid-agent/plod/blob/main/smart_contracts/plod/contract.py">smart_contracts/plod/contract.py</a>.
     </p>

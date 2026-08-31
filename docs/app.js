@@ -1,5 +1,7 @@
 /* PLOD — weekly tick status board. Reads Arcron TestNet keeper box state.
-   TestNet only. Read-only. No wallet. No keys. */
+   TestNet only. Read-only. No wallet. No keys.
+   Reads ONLY u||itob(upkeepId) from deploy.json. Does not walk keeper boxes.
+   Skip 81. Never poke 87. */
 (() => {
   const INDEXER = "https://testnet-idx.algonode.cloud";
   const ALGOD = "https://testnet-api.algonode.cloud";
@@ -9,6 +11,8 @@
   const DEFAULT_KEEPER = 769891898;
   const ROUND_SEC = 2.8;
   const REFRESH_MS = 30000;
+  const SKIP_UPKEEP = 81;
+  const NEVER_POKE = 87;
 
   function b64ToBytes(b64) {
     const bin = atob(b64.replace(/-/g, "+").replace(/_/g, "/"));
@@ -21,11 +25,21 @@
     return dv.getUint32(off) * 0x100000000 + dv.getUint32(off + 4);
   }
 
-  function boxIdFromName(b64name) {
-    const raw = b64ToBytes(b64name);
-    if (raw.length < 9 || raw[0] !== 117) return null; // "u" || itob(upkeep_id)
-    const dv = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);
-    return u64(dv, 1);
+  function itob8(n) {
+    const raw = new Uint8Array(8);
+    const dv = new DataView(raw.buffer);
+    dv.setUint32(0, Math.floor(n / 0x100000000));
+    dv.setUint32(4, n >>> 0);
+    return raw;
+  }
+
+  function upkeepBoxB64(id) {
+    const raw = new Uint8Array(9);
+    raw[0] = 117; // "u"
+    raw.set(itob8(id), 1);
+    let s = "";
+    for (const b of raw) s += String.fromCharCode(b);
+    return btoa(s);
   }
 
   // Same upkeep box layout as corvid-agent/arrivals.
@@ -66,25 +80,12 @@
     return res.json();
   }
 
-  async function listBoxes(keeper) {
-    const names = [];
-    let url = INDEXER + "/v2/applications/" + keeper + "/boxes";
-    for (let i = 0; i < 20; i++) {
-      const page = await fetchJson(url);
-      for (const b of page.boxes || []) names.push(b.name);
-      if (!page["next-token"]) break;
-      url = INDEXER + "/v2/applications/" + keeper +
-        "/boxes?next=" + encodeURIComponent(page["next-token"]);
-    }
-    return names;
-  }
-
   function flaps(el, text) {
     el.replaceChildren();
     for (const ch of String(text)) {
       const d = document.createElement("span");
       d.className = "flap" + (ch === " " ? " blank" : "");
-      d.textContent = ch === " " ? " " : ch;
+      d.textContent = ch === " " ? "\u00a0" : ch;
       el.appendChild(d);
     }
   }
@@ -128,17 +129,27 @@
   }
 
   const STAT_IDS = [
-    "stat-next", "stat-interval", "stat-exec",
-    "stat-escrow", "stat-round", "stat-ticks",
+    "stat-app", "stat-upkeep", "stat-next", "stat-interval",
+    "stat-exec", "stat-escrow", "stat-round", "stat-ticks",
   ];
 
   function fillStats(map) {
     for (const id of STAT_IDS) {
-      flaps(document.getElementById(id), map[id] || "—");
+      if (map[id] == null) continue;
+      flaps(document.getElementById(id), map[id]);
     }
   }
 
-  function renderUpkeep(u, round, ticks) {
+  function paintKnown(cfg, extra) {
+    extra = extra || {};
+    fillStats(Object.assign({
+      "stat-app": cfg.appId ? String(cfg.appId) : "—",
+      "stat-upkeep": cfg.upkeepId ? String(cfg.upkeepId) : "—",
+      "stat-ticks": extra.ticks != null ? String(extra.ticks) : "0",
+    }, extra.stats || {}));
+  }
+
+  function renderUpkeep(u, round, ticks, cfg) {
     const st = statusOf(u, round);
     const cls = st === "ON TIME" ? "ontime" : st === "LATE" ? "late" : "grounded";
     let sub;
@@ -154,12 +165,14 @@
     }
     setStatus(st, cls, sub);
     fillStats({
+      "stat-app": String(cfg.appId),
+      "stat-upkeep": String(u.id),
       "stat-next": String(u.next_execution_round),
       "stat-interval": intervalLabel(u.interval_rounds),
       "stat-exec": String(u.times_executed),
       "stat-escrow": algo(u.balance) + " ALGO",
       "stat-round": String(round),
-      "stat-ticks": ticks == null ? "—" : String(ticks),
+      "stat-ticks": ticks == null ? "0" : String(ticks),
     });
   }
 
@@ -169,11 +182,22 @@
       cfgPromise = fetchJson("./deploy.json", true).then((c) => ({
         appId: Number(c.appId) || 0,
         keeper: Number(c.keeperAppId) || DEFAULT_KEEPER,
+        upkeepId: Number(c.upkeepId) || 0,
         network: c.network || "testnet",
         notes: c.notes || "",
       }));
     }
     return cfgPromise;
+  }
+
+  async function fetchOwnUpkeep(keeper, id) {
+    if (id === NEVER_POKE) throw new Error("refusing upkeep " + NEVER_POKE);
+    if (id === SKIP_UPKEEP || id <= 0) return null;
+    const box = await fetchJson(
+      INDEXER + "/v2/applications/" + keeper +
+      "/box?name=b64:" + encodeURIComponent(upkeepBoxB64(id))
+    );
+    return decodeUpkeep(id, b64ToBytes(box.value));
   }
 
   async function tick() {
@@ -183,61 +207,56 @@
     } catch (e) {
       setStatus("FEED DOWN", "down",
         "deploy.json unreadable · showing nothing rather than guessing");
-      fillStats({});
       return;
     }
     document.getElementById("keeper-meta").textContent =
-      cfg.network + " · weekly · Arcron keeper " + cfg.keeper;
+      cfg.network + " · app " + cfg.appId + " · upkeep " + cfg.upkeepId;
 
     if (cfg.appId <= 0) {
       setStatus("NOT DEPLOYED", "gate",
         'contract exists as <a href="' + CONTRACT_SRC + '">source</a> only' +
         " · lights up after TestNet deploy + Arcron registration");
-      fillStats({});
       return;
     }
 
-    let round, upkeeps, ticks = null;
+    paintKnown(cfg, { ticks: 0 });
+
+    let round, mine = null, ticks = 0;
     try {
       const status = await fetchJson(ALGOD + "/v2/status");
       round = status["last-round"];
-      const names = await listBoxes(cfg.keeper);
-      const decoded = await Promise.all(names.map(async (name) => {
-        const id = boxIdFromName(name);
-        if (id == null) return null;
-        const box = await fetchJson(INDEXER + "/v2/applications/" + cfg.keeper +
-          "/box?name=b64:" + encodeURIComponent(name));
-        return decodeUpkeep(id, b64ToBytes(box.value));
-      }));
-      upkeeps = decoded.filter(Boolean);
+      mine = await fetchOwnUpkeep(cfg.keeper, cfg.upkeepId);
       try {
         const app = await fetchJson(INDEXER + "/v2/applications/" + cfg.appId);
         const params = (app.application && app.application.params) || app.params || {};
         const c = readGlobal(params["global-state"], "calls");
-        ticks = c == null ? null : c;
+        ticks = c == null ? 0 : c;
       } catch {
-        ticks = null; // contract counter is decorative; keeper box is the truth
+        ticks = 0;
       }
     } catch (e) {
       setStatus("FEED DOWN", "down",
-        "indexer unreachable · showing nothing rather than guessing");
-      fillStats({});
+        "indexer unreachable · app " + cfg.appId + " · upkeep " + cfg.upkeepId +
+        " · ticks 0 rather than guessing chain flaps");
+      paintKnown(cfg, { ticks: 0 });
       return;
     }
 
-    const mine = upkeeps.find((u) => u.target_app === cfg.appId);
-    if (!mine) {
+    if (!mine || mine.target_app !== cfg.appId) {
       setStatus("NOT REGISTERED", "gate",
         'app <a href="' + EXPLORER + cfg.appId + '">' + cfg.appId + "</a>" +
-        " is live but no upkeep on keeper " + cfg.keeper + " points at it yet");
+        " is live but upkeep " + cfg.upkeepId + " on keeper " + cfg.keeper +
+        " does not point at it");
       fillStats({
+        "stat-app": String(cfg.appId),
+        "stat-upkeep": cfg.upkeepId ? String(cfg.upkeepId) : "—",
         "stat-round": String(round),
-        "stat-ticks": ticks == null ? "—" : String(ticks),
+        "stat-ticks": String(ticks),
       });
       return;
     }
 
-    renderUpkeep(mine, round, ticks);
+    renderUpkeep(mine, round, ticks, cfg);
   }
 
   tick();
