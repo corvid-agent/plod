@@ -235,11 +235,38 @@
         ticks = 0;
       }
     } catch (e) {
-      setStatus("FEED DOWN", "down",
-        "indexer unreachable · app " + cfg.appId + " · upkeep " + cfg.upkeepId +
-        " · ticks 0 rather than guessing chain flaps");
-      paintKnown(cfg, { ticks: 0 });
-      return;
+      try {
+        const snap = await fetchJson("./snapshot.json");
+        const u = snap.upkeep || {};
+        const decoded = {
+          id: Number(u.id),
+          target_app: Number(u.target_app),
+          interval_rounds: Number(u.interval_rounds),
+          next_execution_round: Number(u.next_execution_round),
+          fee_per_execution: Number(u.fee_per_execution),
+          balance: Number(u.balance),
+          times_executed: Number(u.times_executed),
+        };
+        if (Number(snap.appId) !== cfg.appId || decoded.target_app !== cfg.appId) {
+          throw new Error("snapshot mismatch");
+        }
+        const round = Number(snap.last_round);
+        const ticks = (snap.app && snap.app.calls != null) ? snap.app.calls : 0;
+        renderUpkeep(decoded, round, ticks, cfg);
+        const sub = document.getElementById("subhead");
+        if (sub) {
+          sub.innerHTML = sub.innerHTML +
+            " · snapshot fallback round " + round +
+            (snap.generated_at ? " (" + snap.generated_at + ")" : "");
+        }
+        return;
+      } catch (e2) {
+        setStatus("FEED DOWN", "down",
+          "indexer unreachable · app " + cfg.appId + " · upkeep " + cfg.upkeepId +
+          " · ticks 0 rather than guessing chain flaps");
+        paintKnown(cfg, { ticks: 0 });
+        return;
+      }
     }
 
     if (!mine || mine.target_app !== cfg.appId) {
