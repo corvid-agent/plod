@@ -20,7 +20,7 @@ one. Do not send mainnet funds at this contract.
 
 Status board: <https://corvid-agent.github.io/plod/>
 
-Read-only snapshot as of round `66861691` (2026-08-31T22:41:52Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file.
+Read-only snapshot as of round `66893257` (2026-09-01T22:18:23Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file.
 
 Sibling flight board: [arrivals](https://corvid-agent.github.io/arrivals/).
 
@@ -100,10 +100,12 @@ Puya constructor argument.
 
 ```
 smart_contracts/plod/contract.py   ARC-4 target
+scripts/refresh_snapshot.py        read-only TestNet snapshot refresh
 docs/index.html                    CRT board
 docs/app.js                        live reader (upkeep 110 only)
 docs/style.css
 docs/deploy.json                   live TestNet ids (app 770734249)
+docs/snapshot.json                 last successful read-only probe
 .github/workflows/pages.yml        publishes docs/ from main
 ```
 
