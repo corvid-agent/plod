@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -13,7 +14,10 @@ KEEPER = 769891898
 UPKEEP = 110
 ALGOD = "https://testnet-api.algonode.cloud"
 INDEXER = "https://testnet-idx.algonode.cloud"
-OUT = Path(__file__).resolve().parents[1] / "docs" / "snapshot.json"
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "docs" / "snapshot.json"
+HISTORY = ROOT / "docs" / "history.json"
+README = ROOT / "README.md"
 
 
 def get(url: str) -> dict:
@@ -62,6 +66,55 @@ def status_of(u: dict, last_round: int) -> str:
     return "ON TIME"
 
 
+def append_history(snapshot: dict) -> None:
+    """Append one history row if lastRound is new. Never invent rounds."""
+    last_round = int(snapshot["last_round"])
+    upkeep = snapshot["upkeep"]
+    row = {
+        "t": snapshot["generated_at"],
+        "network": "testnet",
+        "appId": APP_ID,
+        "keeperAppId": KEEPER,
+        "upkeepId": UPKEEP,
+        "lastRound": last_round,
+        "next_execution_round": int(upkeep["next_execution_round"]),
+        "remaining_rounds": int(upkeep["next_execution_round"]) - last_round,
+        "escrow": int(upkeep["balance"]),
+        "ticks": int((snapshot.get("app") or {}).get("calls") or 0),
+        "times_executed": int(upkeep.get("times_executed") or 0),
+        "status": snapshot["status"],
+        "source": "docs/snapshot.json",
+    }
+    rows: list = []
+    if HISTORY.exists():
+        try:
+            loaded = json.loads(HISTORY.read_text())
+            if isinstance(loaded, list):
+                rows = loaded
+        except json.JSONDecodeError:
+            rows = []
+    if any(int(r.get("lastRound") or 0) == last_round for r in rows if isinstance(r, dict)):
+        print(f"history.json unchanged (lastRound {last_round} already present)")
+        return
+    rows.append(row)
+    HISTORY.write_text(json.dumps(rows, indent=2) + "\n")
+    print(f"appended history.json lastRound={last_round} remaining={row['remaining_rounds']}")
+
+
+def update_readme(last_round: int, generated_at: str) -> None:
+    if not README.exists():
+        return
+    text = README.read_text()
+    # Update the live-proof snapshot line round/time when present.
+    pat = re.compile(
+        r"(Read-only snapshot as of round `)\d+(` \()\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z( UTC\):)"
+    )
+    new = pat.sub(rf"\g<1>{last_round}\g<2>{generated_at}\g<3>", text, count=1)
+    if new != text:
+        README.write_text(new)
+        print(f"updated README snapshot round to {last_round}")
+
+
 def main() -> None:
     if UPKEEP in (81, 87):
         raise SystemExit("refusing upkeep 81/87")
@@ -74,13 +127,14 @@ def main() -> None:
     upkeep = decode_upkeep(base64.b64decode(box["value"]))
     if upkeep["target_app"] != APP_ID:
         raise SystemExit(f"upkeep {UPKEEP} target {upkeep['target_app']} != {APP_ID}")
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     snapshot = {
         "network": "testnet",
         "appId": APP_ID,
         "keeperAppId": KEEPER,
         "upkeepId": UPKEEP,
         "last_round": last_round,
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": generated_at,
         "source": {
             "indexer": INDEXER,
             "algod": ALGOD,
@@ -100,6 +154,8 @@ def main() -> None:
         f"wrote {OUT} last_round={last_round} status={snapshot['status']} "
         f"next={upkeep['next_execution_round']} ticks={snapshot['app']['calls']}"
     )
+    append_history(snapshot)
+    update_readme(last_round, generated_at)
 
 
 if __name__ == "__main__":

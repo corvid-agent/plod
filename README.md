@@ -18,9 +18,9 @@ one. Do not send mainnet funds at this contract.
 | Ticks so far | `0` |
 | Creator | `CEPY52VZRWFLQCJZXQRVQFOPMNAD6M4HCDP4XWKVFXRONJTC6KJVWRCXJI` |
 
-Status board: <https://corvid-agent.github.io/plod/>
+Status board: <https://corvid-agent.github.io/plod/> (CRT flaps plus remaining-rounds / escrow / weekly-timeline graphs)
 
-Read-only snapshot as of round `66928609` (2026-09-03T00:46:21Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file.
+Read-only snapshot as of round `66952200` (2026-09-03T18:26:48Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file. CRT graphs paint appending TestNet samples from `docs/history.json` via in-page sql.js (filtered to app 770734249 / upkeep 110).
 
 Sibling flight board: [arrivals](https://corvid-agent.github.io/arrivals/).
 
@@ -101,11 +101,12 @@ Puya constructor argument.
 ```
 smart_contracts/plod/contract.py   ARC-4 target
 scripts/refresh_snapshot.py        read-only TestNet snapshot refresh
-docs/index.html                    CRT board
-docs/app.js                        live reader (upkeep 110 only)
+docs/index.html                    CRT board + escrow/countdown graphs
+docs/app.js                        live reader + sql.js history graphs (upkeep 110)
 docs/style.css
 docs/deploy.json                   live TestNet ids (app 770734249)
 docs/snapshot.json                 last successful read-only probe
+docs/history.json                  appending TestNet probe samples for graphs
 .github/workflows/pages.yml        publishes docs/ from main
 ```
 

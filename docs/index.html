@@ -54,17 +54,46 @@
       </div>
     </section>
 
+    <section class="graphs" id="graphs" aria-label="plod TestNet history graphs">
+      <div class="graph-cell">
+        <div class="label">Remaining rounds</div>
+        <canvas id="remaining-canvas" width="640" height="160" aria-label="remaining rounds countdown over samples"></canvas>
+        <div class="graph-legend">
+          <span class="lg remaining">countdown</span>
+        </div>
+        <div class="meta" id="remaining-meta">sqlite 0 samples</div>
+      </div>
+      <div class="graph-cell">
+        <div class="label">Escrow µALGO</div>
+        <canvas id="escrow-canvas" width="640" height="160" aria-label="escrow over samples and current vs fee"></canvas>
+        <div class="graph-legend">
+          <span class="lg escrow">escrow</span>
+          <span class="lg fee">fee</span>
+        </div>
+      </div>
+      <div class="graph-cell wide">
+        <div class="label">Weekly timeline</div>
+        <canvas id="timeline-canvas" width="640" height="120" aria-label="registered last next execution rounds"></canvas>
+        <div class="graph-legend">
+          <span class="lg ticks">ticks</span>
+        </div>
+      </div>
+    </section>
+
     <p class="notes" id="notes">
       One upkeep, one weekly <code>tick()</code>. App
       <a href="https://testnet.explorer.perawallet.app/application/770734249">770734249</a>,
       upkeep 110, next round 67054248, ticks 0. Status is read from box
       <code>u || itob(110)</code> on keeper 769891898 — the chain is the source
-      of truth. Contract:
+      of truth. Graphs paint appending TestNet history via in-page SQLite
+      (<code>docs/history.json</code>, filtered to app 770734249 / upkeep 110).
+      Contract:
       <a href="https://github.com/corvid-agent/plod/blob/main/smart_contracts/plod/contract.py">smart_contracts/plod/contract.py</a>.
     </p>
 
     <footer class="foot">Arcron is unaudited. TestNet only. Read-only, no wallet.</footer>
   </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/sql-wasm.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
