@@ -20,7 +20,7 @@ one. Do not send mainnet funds at this contract.
 
 Status board: <https://corvid-agent.github.io/plod/>
 
-Read-only snapshot as of round `66924533` (2026-09-02T21:43:27Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file.
+Read-only snapshot as of round `66928609` (2026-09-03T00:46:21Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file.
 
 Sibling flight board: [arrivals](https://corvid-agent.github.io/arrivals/).
 
