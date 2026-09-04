@@ -20,7 +20,7 @@ one. Do not send mainnet funds at this contract.
 
 Status board: <https://corvid-agent.github.io/plod/> (CRT flaps plus remaining-rounds / escrow / weekly-timeline graphs)
 
-Read-only snapshot as of round `66952200` (2026-09-03T18:26:48Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file. CRT graphs paint appending TestNet samples from `docs/history.json` via in-page sql.js (filtered to app 770734249 / upkeep 110).
+Read-only snapshot as of round `66980092` (2026-09-04T15:21:33Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file. CRT graphs paint appending TestNet samples from `docs/history.json` via in-page sql.js (filtered to app 770734249 / upkeep 110).
 
 Sibling flight board: [arrivals](https://corvid-agent.github.io/arrivals/).
 
