@@ -12,15 +12,15 @@ one. Do not send mainnet funds at this contract.
 | Upkeep | `110` |
 | Interval | `224000` rounds (~1 week at measured TestNet round time) |
 | Policy | `SKIP_AHEAD` |
-| Next tick | round `67054248` |
+| Next tick | round `67278248` |
 | Fee | `4000` µALGO / tick |
-| Escrow | `500000` µALGO (0.5 ALGO) |
-| Ticks so far | `0` |
+| Escrow | `496000` µALGO (0.496 ALGO) |
+| Ticks so far | `1` |
 | Creator | `CEPY52VZRWFLQCJZXQRVQFOPMNAD6M4HCDP4XWKVFXRONJTC6KJVWRCXJI` |
 
 Status board: <https://corvid-agent.github.io/plod/> (CRT flaps plus remaining-rounds / escrow / weekly-timeline graphs)
 
-Read-only snapshot as of round `66992603` (2026-09-05T00:43:15Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file. CRT graphs paint appending TestNet samples from `docs/history.json` via in-page sql.js (filtered to app 770734249 / upkeep 110).
+Read-only snapshot as of round `67080594` (2026-09-07T18:36:43Z UTC): `docs/snapshot.json`. Refresh with `python3 scripts/refresh_snapshot.py` (no key). The CRT prefers live algod/indexer and falls back to that file. CRT graphs paint appending TestNet samples from `docs/history.json` via in-page sql.js (filtered to app 770734249 / upkeep 110).
 
 Sibling flight board: [arrivals](https://corvid-agent.github.io/arrivals/).
 
@@ -56,8 +56,8 @@ On TestNet as of 2026-08-30 ([#1](https://github.com/corvid-agent/plod/issues/1)
 - Hook: `tick()` (selector only)
 - Interval: **224000 rounds** at measured ~2.7 s/round
 - Fee: **4000 µALGO**, escrow **0.5 ALGO**, policy **SKIP_AHEAD**
-- First tick due round **67054248**
-- Contract `calls` is still **0**
+- First tick landed (times_executed=1); next due round **67278248**
+- Contract `calls` is now **1** (last_round 67054512)
 
 That round count was chosen at **register** time against measured round time,
 not compiled into the app.

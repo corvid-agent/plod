@@ -3,27 +3,27 @@
   "appId": 770734249,
   "keeperAppId": 769891898,
   "upkeepId": 110,
-  "last_round": 66992603,
-  "generated_at": "2026-09-05T00:43:15Z",
+  "last_round": 67080594,
+  "generated_at": "2026-09-07T18:36:43Z",
   "source": {
     "indexer": "https://testnet-idx.algonode.cloud",
     "algod": "https://testnet-api.algonode.cloud",
     "box": "u||itob(110)"
   },
   "app": {
-    "calls": 0,
+    "calls": 1,
     "keeper_app": 769891898,
-    "last_round": 0
+    "last_round": 67054512
   },
   "upkeep": {
     "id": 110,
     "target_app": 770734249,
     "interval_rounds": 224000,
-    "next_execution_round": 67054248,
+    "next_execution_round": 67278248,
     "fee_per_execution": 4000,
-    "balance": 500000,
-    "times_executed": 0,
-    "registered_round": 66830248
+    "balance": 496000,
+    "times_executed": 1,
+    "registered_round": 67054512
   },
   "status": "ON TIME",
   "notes": "Read-only snapshot of box u||itob(110). Skip 81. Never poke 87. No invented txids."
