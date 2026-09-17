@@ -266,7 +266,7 @@
     ctx.clearRect(0, 0, w, h);
     const reg = Number((sample && sample.registered_round) || REGISTERED_ROUND);
     const last = Number((sample && sample.lastRound) || 0);
-    const next = Number((sample && sample.next_execution_round) || 67054248);
+    const next = Number((sample && sample.next_execution_round) || 67502248);
     const ticks = Number((sample && sample.ticks) || 0);
     const lo = Math.min(reg, last || reg, next);
     const hi = Math.max(reg, last || reg, next);
@@ -399,7 +399,7 @@
         ? Object.assign({}, last, {
             registered_round: REGISTERED_ROUND,
           })
-        : { registered_round: REGISTERED_ROUND, lastRound: 0, next_execution_round: 67054248, ticks: 0 }
+        : { registered_round: REGISTERED_ROUND, lastRound: 0, next_execution_round: 67502248, ticks: 2 }
     );
   }
 

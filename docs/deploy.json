@@ -5,5 +5,5 @@
   "upkeepId": 110,
   "deployedAt": "2026-08-30",
   "deployer": "CEPY52VZRWFLQCJZXQRVQFOPMNAD6M4HCDP4XWKVFXRONJTC6KJVWRCXJI",
-  "notes": "live on TestNet. weekly interval 224000 rounds, SKIP_AHEAD, 4000 µALGO/tick. first tick due ~round 67054248."
+  "notes": "live on TestNet. weekly interval 224000 rounds, SKIP_AHEAD, 4000 µALGO/tick. two ticks landed; next due ~round 67502248; escrow 492000 µALGO as of snapshot 67402244."
 }
