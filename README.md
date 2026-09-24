@@ -12,10 +12,10 @@ one. Do not send mainnet funds at this contract.
 | Upkeep | `110` |
 | Interval | `224000` rounds (~1 week at measured TestNet round time) |
 | Policy | `SKIP_AHEAD` |
-| Next tick | round `67278248` |
+| Next tick | round `67726248` |
 | Fee | `4000` µALGO / tick |
-| Escrow | `496000` µALGO (0.496 ALGO) |
-| Ticks so far | `1` |
+| Escrow | `488000` µALGO (0.488 ALGO) |
+| Ticks so far | `3` |
 | Creator | `CEPY52VZRWFLQCJZXQRVQFOPMNAD6M4HCDP4XWKVFXRONJTC6KJVWRCXJI` |
 
 Status board: <https://corvid-agent.github.io/plod/> (CRT flaps plus remaining-rounds / escrow / weekly-timeline graphs)
@@ -55,11 +55,11 @@ On TestNet as of 2026-08-30 ([#1](https://github.com/corvid-agent/plod/issues/1)
 - Upkeep: **`110`**
 - Hook: `tick()` (selector only)
 - Interval: **224000 rounds** at measured ~2.7 s/round
-- Fee: **4000 µALGO**, escrow **0.5 ALGO**, policy **SKIP_AHEAD**
-- First tick landed (times_executed=1); next due round **67278248**
-- Contract `calls` is now **1** (last_round 67054512)
+- Fee: **4000 µALGO**, escrow started at **0.5 ALGO**, policy **SKIP_AHEAD**
+- First tick landed at round **67054512** (times_executed became 1; next was **67278248**)
+- Third tick landed; as of snapshot round **67621739** (2026-09-24T15:50:28Z): times_executed / `calls` **3**, last tick round **67502251**, next due **67726248**, escrow **488000** µALGO, status **ON TIME**
 
-That round count was chosen at **register** time against measured round time,
+That interval was chosen at **register** time against measured round time,
 not compiled into the app.
 
 The Pages board reads **only** box `u || itob(110)` on the keeper plus this
